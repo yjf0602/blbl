@@ -33,7 +33,7 @@ import blbl.cat3399.core.api.video.VideoPlayRequest
 import blbl.cat3399.core.api.video.VideoPlayStream
 import blbl.cat3399.core.api.video.VideoPopularRequest
 import blbl.cat3399.core.api.video.VideoRecommendRequest
-import blbl.cat3399.core.api.video.VideoRegionLatestRequest
+import blbl.cat3399.core.api.video.VideoRegionRankRequest
 import blbl.cat3399.core.api.video.VideoSeriesArchivesRequest
 import blbl.cat3399.core.api.video.VideoShotInfo
 import blbl.cat3399.core.api.video.VideoShotRequest
@@ -1329,16 +1329,16 @@ object BiliApi {
             .popular(VideoPopularRequest(pn = pn, ps = ps))
             .toHasMorePage()
 
-    suspend fun regionLatest(rid: Int, pn: Int = 1, ps: Int = 20): List<VideoCard> =
-        regionLatestPage(rid = rid, pn = pn, ps = ps).items
+    suspend fun regionRank(rid: Int, pn: Int = 1, ps: Int = 20): List<VideoCard> =
+        regionRankPage(rid = rid, pn = pn, ps = ps).items
 
-    suspend fun regionLatestPage(
+    suspend fun regionRankPage(
         rid: Int,
         pn: Int = 1,
         ps: Int = 20,
     ): HasMorePage<VideoCard> =
         VideoApiGateway
-            .regionLatest(VideoRegionLatestRequest(rid = rid, pn = pn, ps = ps))
+            .regionRank(VideoRegionRankRequest(rid = rid, pn = pn, ps = ps))
             .toHasMorePage()
 
     suspend fun dynamicTag(

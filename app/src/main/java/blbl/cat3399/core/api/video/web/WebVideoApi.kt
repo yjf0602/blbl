@@ -17,7 +17,7 @@ import blbl.cat3399.core.api.video.VideoPlayStream
 import blbl.cat3399.core.api.video.VideoPopularRequest
 import blbl.cat3399.core.api.video.VideoRecommendPage
 import blbl.cat3399.core.api.video.VideoRecommendRequest
-import blbl.cat3399.core.api.video.VideoRegionLatestRequest
+import blbl.cat3399.core.api.video.VideoRegionRankRequest
 import blbl.cat3399.core.api.video.VideoSeriesArchivesRequest
 import blbl.cat3399.core.api.video.VideoSourceApi
 import blbl.cat3399.core.api.video.VideoOnlineStatus
@@ -47,7 +47,7 @@ internal class WebVideoApi(
             BiliApiCapability.VIDEO_DETAIL,
             BiliApiCapability.VIDEO_RECOMMEND,
             BiliApiCapability.VIDEO_POPULAR,
-            BiliApiCapability.VIDEO_REGION_LATEST,
+            BiliApiCapability.VIDEO_REGION_RANK,
             BiliApiCapability.VIDEO_DYNAMIC_TAG,
             BiliApiCapability.VIDEO_ARCHIVE_RELATED,
             BiliApiCapability.VIDEO_PLAY_URL_UGC,
@@ -126,20 +126,39 @@ internal class WebVideoApi(
         return withContext(Dispatchers.Default) { mapper.parsePopularPage(data = data, request = safeRequest) }
     }
 
-    override suspend fun regionLatest(request: VideoRegionLatestRequest): VideoCardPage<VideoRegionLatestRequest> {
-        val safeRid = request.rid.takeIf { it > 0 } ?: error("region_latest_invalid_rid")
+    override suspend fun regionRank(request: VideoRegionRankRequest): VideoCardPage<VideoRegionRankRequest> {
+        val safeRid = request.rid.takeIf { it > 0 } ?: error("region_rank_invalid_rid")
         val safePn = request.pn.coerceAtLeast(1)
         val safePs = request.ps.coerceIn(1, 50)
         val safeRequest = request.copy(rid = safeRid, pn = safePn, ps = safePs)
-        val url =
-            transport.withQuery(
-                "https://api.bilibili.com/x/web-interface/dynamic/region",
-                mapOf("rid" to safeRid.toString(), "pn" to safePn.toString(), "ps" to safePs.toString()),
+        if (safePn > 1) {
+            return VideoCardPage(
+                source = source,
+                request = safeRequest,
+                items = emptyList(),
+                page = safePn,
+                hasMore = false,
+                total = 0,
             )
-        val json = transport.getJson(url)
+        }
+
+        transport.ensurePgcPlayCookieMaintenance()
+        val keys = transport.ensureWbiKeys()
+        val url =
+            transport.signedWbiUrl(
+                path = "/x/web-interface/ranking/v2",
+                params = mapOf("rid" to safeRid.toString(), "type" to "all"),
+                keys = keys,
+            )
+        val json =
+            transport.getJson(
+                url = url,
+                headers = transport.webHeaders(targetUrl = url, includeCookie = true),
+                noCookies = true,
+            )
         checkApiCode(json)
         val data = json.optJSONObject("data") ?: JSONObject()
-        return withContext(Dispatchers.Default) { mapper.parseRegionLatestPage(data = data, request = safeRequest) }
+        return withContext(Dispatchers.Default) { mapper.parseRegionRankPage(data = data, request = safeRequest) }
     }
 
     override suspend fun dynamicTag(request: VideoDynamicTagRequest): VideoCardPage<VideoDynamicTagRequest> {

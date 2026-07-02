@@ -52,6 +52,7 @@ import blbl.cat3399.feature.player.parseMultiPagePlaylistFromDetailWithUiCards
 import blbl.cat3399.feature.player.parseVideoCardsToPlaylistParsed
 import blbl.cat3399.feature.player.parseUgcSeasonPlaylistFromDetailWithUiCards
 import blbl.cat3399.feature.player.userMessage
+import blbl.cat3399.feature.category.CategoryZones
 import blbl.cat3399.feature.tag.TagDetailActivity
 import blbl.cat3399.feature.video.comment.VideoCommentImageViewerController
 import blbl.cat3399.feature.video.comment.VideoCommentImageViewerViews
@@ -670,7 +671,7 @@ class VideoDetailActivity : BaseActivity() {
     }
 
     private fun onVideoTagClick(tag: VideoTag) {
-        val safeRid = tabId?.takeIf { it > 0 }
+        val safeRid = tabId?.takeIf { it > 0 }?.let(CategoryZones::rankRidForLegacyTid)
         if (safeRid == null) {
             AppToast.show(this, "未获取到分区信息")
             return

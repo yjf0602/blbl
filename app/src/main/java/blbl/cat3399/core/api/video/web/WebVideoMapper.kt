@@ -22,7 +22,7 @@ import blbl.cat3399.core.api.video.VideoPlayResume
 import blbl.cat3399.core.api.video.VideoPlayStream
 import blbl.cat3399.core.api.video.VideoPopularRequest
 import blbl.cat3399.core.api.video.VideoProgressiveStream
-import blbl.cat3399.core.api.video.VideoRegionLatestRequest
+import blbl.cat3399.core.api.video.VideoRegionRankRequest
 import blbl.cat3399.core.api.video.VideoResumeTimeUnit
 import blbl.cat3399.core.api.video.VideoSegmentBase
 import blbl.cat3399.core.api.video.VideoSeriesArchivesRequest
@@ -145,16 +145,19 @@ internal class WebVideoMapper(
         )
     }
 
-    fun parseRegionLatestPage(
+    fun parseRegionRankPage(
         data: JSONObject,
-        request: VideoRegionLatestRequest,
-    ): VideoCardPage<VideoRegionLatestRequest> {
-        return parseArchiveListPage(
-            data = data,
+        request: VideoRegionRankRequest,
+    ): VideoCardPage<VideoRegionRankRequest> {
+        val list = data.optJSONArray("list") ?: JSONArray()
+        val items = parseVideoCards(list)
+        return VideoCardPage(
+            source = source,
             request = request,
-            fallbackPage = request.pn,
-            fallbackPageSize = request.ps,
-            useLengthFallback = true,
+            items = items,
+            page = 1,
+            hasMore = false,
+            total = items.size,
         )
     }
 
